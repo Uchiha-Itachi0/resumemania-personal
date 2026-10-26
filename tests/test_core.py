@@ -180,6 +180,10 @@ def test_validate_inputs_rejects_short_text(resume_text, jd_text):
     validate_inputs(resume_text, jd_text)
 
 
+def test_ligatures_are_normalised():
+    assert from_paste("Certiﬁcations and ﬁne-tuning").text == "Certifications and fine-tuning"
+
+
 def test_from_paste_collapses_blank_lines():
     assert from_paste("a\n\n\n\nb\r\n").text == "a\n\nb"
 

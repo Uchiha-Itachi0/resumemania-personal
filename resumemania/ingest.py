@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import unicodedata
 from dataclasses import dataclass
 from pathlib import PurePath
 
@@ -50,6 +51,8 @@ def from_paste(text: str) -> ExtractedText:
 
 
 def clean_resume_text(text: str) -> str:
+    # NFKC turns PDF ligatures like "ﬁ" back into "fi" so keywords match.
+    text = unicodedata.normalize("NFKC", text)
     lines = [line.rstrip() for line in text.replace("\r\n", "\n").split("\n")]
     collapsed: list[str] = []
     for line in lines:
@@ -102,7 +105,9 @@ def _from_docx(data: bytes) -> ExtractedText:
     except Exception as exc:  # python-docx raises zipfile/KeyError variants
         raise IngestError("We couldn't open that DOCX. Try saving it again or upload a PDF.") from exc
 
-    parts = [p.text for p in document.paragraphs]
+    # Word list items lose their bullet symbol in plain text, so put one back.
+    parts = [f"• {p.text}" if p.style is not None and "List" in (p.style.name or "") and p.text.strip()
+             else p.text for p in document.paragraphs]
     for table in document.tables:
         for row in table.rows:
             parts.append(" | ".join(cell.text.strip() for cell in row.cells))

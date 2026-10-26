@@ -7,7 +7,7 @@ import re
 from .schemas import ReadabilityCheck
 
 STANDARD_HEADINGS = ("education", "experience", "skills", "projects")
-MIN_WORDS = 250
+MIN_WORDS = 180  # a one-page fresher resume
 MAX_WORDS = 900
 MAX_PDF_PAGES = 2
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
@@ -20,6 +20,7 @@ ACTION_VERBS = (
     "reduced", "increased", "managed", "analysed", "analyzed", "automated", "delivered", "wrote",
     "made", "worked", "helped", "cleaned", "launched", "owned", "optimised", "optimized",
     "migrated", "deployed", "trained", "researched", "integrated", "cut", "grew", "ran",
+    "rebuilt", "added", "found", "triaged", "defined", "moved", "set up", "shipped", "wrote", "fine-tuned",
 )
 VERB_LINE_RE = re.compile(rf"^\s*({'|'.join(ACTION_VERBS)})\b", re.MULTILINE | re.IGNORECASE)
 
