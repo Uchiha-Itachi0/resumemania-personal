@@ -137,6 +137,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]{background:var(--page);border-co
 .rm-check:first-child{border-top:none}
 .rm-check .d{color:var(--meta);font-size:14px}
 .rm-muted{color:var(--meta);font-size:14px}
+[data-testid="stHeaderActionElements"]{display:none}
 </style>
 """.replace("__FONTS__", FONTS_URL)
 
