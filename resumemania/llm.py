@@ -20,8 +20,13 @@ T = TypeVar("T", bound=BaseModel)
 MAX_ATTEMPTS = 2
 RETRY_BASE_SECONDS = 1.5
 DEFAULT_TIMEOUT_SECONDS = 45
-# After a model fails with an outage error, skip it for this long so later steps don't wait on it.
+# After an outage (503, 504, timeout), skip the model for this long so later steps don't wait on it.
 COOLDOWN_SECONDS = 300
+# A rate limit (429) is usually per minute, so wait and retry the same model first.
+RATE_LIMIT_RETRIES = 4
+RATE_LIMIT_DEFAULT_WAIT_SECONDS = 8
+RATE_LIMIT_MAX_WAIT_SECONDS = 60
+RATE_LIMIT_COOLDOWN_SECONDS = 30
 
 
 class LLMError(RuntimeError):
@@ -85,7 +90,7 @@ class GeminiLLM:
                 return self._call(candidate, config, prompt, schema, step)
             except _ModelUnavailable as exc:
                 last_error = exc.__cause__
-                self._cool_down(candidate)
+                self._cool_down(candidate, exc.cooldown_seconds)
                 if index + 1 < len(candidates):
                     logger.warning("step=%s model=%s status=failover to=%s",
                                    step, candidate, candidates[index + 1])
@@ -104,15 +109,18 @@ class GeminiLLM:
             logger.info("skipping models in cooldown: %s", ",".join(skipped))
         return healthy or ordered
 
-    def _cool_down(self, model: str) -> None:
+    def _cool_down(self, model: str, seconds: float = COOLDOWN_SECONDS) -> None:
         with self._lock:
-            self._cooldown_until[model] = time.monotonic() + COOLDOWN_SECONDS
+            self._cooldown_until[model] = time.monotonic() + seconds
 
     def _call(self, model: str, config: object, prompt: str, schema: type[T], step: str) -> T:
         import httpx
         from google.genai import errors
 
-        for attempt in range(1, MAX_ATTEMPTS + 1):
+        attempt = 0
+        rate_limited = 0
+        while True:
+            attempt += 1
             started = time.perf_counter()
             try:
                 response = self._client.models.generate_content(
@@ -123,9 +131,15 @@ class GeminiLLM:
                 return result
             except errors.ClientError as exc:
                 if exc.code == 429:
-                    # Rate limited on this model: another model has its own quota.
-                    logger.warning("step=%s model=%s status=rate_limited ms=%d", step, model, _ms_since(started))
-                    raise _ModelUnavailable() from exc
+                    rate_limited += 1
+                    wait = _retry_delay(exc, rate_limited)
+                    logger.warning("step=%s model=%s status=rate_limited wait=%.0fs try=%d",
+                                   step, model, wait, rate_limited)
+                    if rate_limited > RATE_LIMIT_RETRIES or wait > RATE_LIMIT_MAX_WAIT_SECONDS:
+                        # Still limited (or a daily quota): let another model take this step.
+                        raise _ModelUnavailable(RATE_LIMIT_COOLDOWN_SECONDS) from exc
+                    time.sleep(wait)
+                    continue
                 # Bad key, unknown model, bad request. Retrying will not help.
                 logger.warning("step=%s model=%s status=client_error code=%s", step, model, exc.code)
                 raise LLMError(_client_error_message(exc, model)) from exc
@@ -137,10 +151,9 @@ class GeminiLLM:
             except (ValidationError, ValueError) as exc:
                 logger.warning("step=%s model=%s status=bad_output attempt=%d ms=%d",
                                step, model, attempt, _ms_since(started))
-                if attempt == MAX_ATTEMPTS:
+                if attempt >= MAX_ATTEMPTS:
                     raise _ModelUnavailable() from exc
                 time.sleep(RETRY_BASE_SECONDS * attempt)
-        raise AssertionError("unreachable")
 
 
 def _ms_since(started: float) -> int:
@@ -149,6 +162,24 @@ def _ms_since(started: float) -> int:
 
 class _ModelUnavailable(Exception):
     """Internal: this model can't answer right now. Try the next one."""
+
+    def __init__(self, cooldown_seconds: float = COOLDOWN_SECONDS):
+        super().__init__()
+        self.cooldown_seconds = cooldown_seconds
+
+
+def _retry_delay(exc: Exception, tries: int) -> float:
+    """Seconds Gemini asks us to wait (RetryInfo.retryDelay), else a growing default."""
+    details = getattr(exc, "details", None) or {}
+    error = details.get("error", details) if isinstance(details, dict) else {}
+    for item in error.get("details", []) if isinstance(error, dict) else []:
+        delay = item.get("retryDelay") if isinstance(item, dict) else None
+        if isinstance(delay, str) and delay.endswith("s"):
+            try:
+                return float(delay[:-1]) + 1
+            except ValueError:
+                break
+    return RATE_LIMIT_DEFAULT_WAIT_SECONDS * tries
 
 
 def _parse_response(response: object, schema: type[T]) -> T:

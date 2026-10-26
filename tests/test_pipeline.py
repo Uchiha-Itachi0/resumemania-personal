@@ -190,12 +190,37 @@ def test_gemini_falls_back_when_model_is_busy(monkeypatch, job):
     assert fake.calls == 3  # main busy -> backup busy -> last answers, no wasted retries
 
 
-def test_gemini_rate_limit_fails_over(monkeypatch, job):
+def _limited(delay: str | None = None):
     from google.genai import errors
 
-    limited = errors.ClientError(429, {"error": {"message": "quota", "status": "RESOURCE_EXHAUSTED"}})
-    llm, fake = _gemini([limited, SimpleNamespace(parsed=job, text="")], monkeypatch, fallback=("backup",))
+    details = [{"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": delay}] if delay else []
+    return errors.ClientError(429, {"error": {"message": "quota", "status": "RESOURCE_EXHAUSTED",
+                                              "details": details}})
+
+
+def test_gemini_rate_limit_waits_and_retries_same_model(monkeypatch, job):
+    waits: list[float] = []
+    monkeypatch.setattr("resumemania.llm.time.sleep", waits.append)
+    llm, fake = _gemini([_limited("3s"), SimpleNamespace(parsed=job, text="")], monkeypatch, fallback=("backup",))
     assert llm.generate(model="main", system="s", prompt="p", schema=JobRequirements, step="x") == job
+    assert waits == [4.0]  # Gemini's retryDelay plus a second
+    assert fake.calls == 2
+
+
+def test_gemini_rate_limit_fails_over_after_retries(monkeypatch, job):
+    monkeypatch.setattr("resumemania.llm.time.sleep", lambda s: None)
+    outcomes = [_limited()] * 5 + [SimpleNamespace(parsed=job, text="")]
+    llm, fake = _gemini(outcomes, monkeypatch, fallback=("backup",))
+    assert llm.generate(model="main", system="s", prompt="p", schema=JobRequirements, step="x") == job
+    assert fake.calls == 6  # 1 + 4 retries on main, then backup answers
+
+
+def test_gemini_long_quota_wait_fails_over_at_once(monkeypatch, job):
+    monkeypatch.setattr("resumemania.llm.time.sleep", lambda s: None)
+    llm, fake = _gemini([_limited("3600s"), SimpleNamespace(parsed=job, text="")], monkeypatch,
+                        fallback=("backup",))
+    assert llm.generate(model="main", system="s", prompt="p", schema=JobRequirements, step="x") == job
+    assert fake.calls == 2
 
 
 def test_gemini_all_models_busy_gives_friendly_error(monkeypatch):
