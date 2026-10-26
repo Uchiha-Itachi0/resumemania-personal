@@ -1,0 +1,21 @@
+[project]
+name = "resumemania-personal"
+version = "0.1.0"
+description = "Find out how well your resume fits a job, then fix it without making anything up."
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["resumemania", "ui"]
+omit = ["ui/theme.py"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]

@@ -1,0 +1,30 @@
+Priya Sharma
+priya.sharma@example.com | +91 98765 43210 | linkedin.com/in/priya-sharma-example | Pune
+
+SUMMARY
+Final-year B.Tech Computer Science student who likes turning messy data into clear answers.
+
+SKILLS
+Python, Pandas, SQL (MySQL), Excel, Matplotlib, Git, basic Tableau
+
+EXPERIENCE
+Data Analyst Intern | Shreeji Retail Pvt Ltd | May 2025 - Jul 2025
+- Worked on sales data for 12 stores.
+- Made weekly reports in Excel for the operations team.
+- Cleaned customer data using Python and Pandas.
+- Helped with a dashboard.
+
+PROJECTS
+Campus Canteen Demand Forecast | Jan 2025 - Apr 2025
+- Built a model in Python to predict daily canteen orders using 2 years of order data.
+- Cut food waste by 18% in the pilot month by sharing forecasts with canteen staff.
+
+Movie Ratings Explorer | Aug 2024
+- Made a project on movie ratings using SQL.
+- Did analysis and charts.
+
+EDUCATION
+B.Tech, Computer Science | MIT World Peace University, Pune | 2022 - 2026 | CGPA 8.4
+
+CERTIFICATIONS
+Google Data Analytics Certificate (Coursera), 2024

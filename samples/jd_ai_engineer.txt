@@ -1,0 +1,25 @@
+AI Engineer (0-2 years) - Bengaluru / Remote
+
+About the role
+Join our Applied AI team to build LLM-powered features that ship to thousands of users. You'll take ideas from prototype to production.
+
+What you'll do
+- Build LLM applications and agents using Python
+- Design retrieval-augmented generation (RAG) pipelines with vector databases
+- Write and evaluate prompts; set up evals to measure quality
+- Build and deploy APIs with FastAPI and Docker
+- Monitor cost, latency and quality of models in production
+
+Must have
+- Strong Python
+- Hands-on experience building with LLM APIs (OpenAI, Anthropic, Gemini or similar)
+- Experience with RAG and vector databases (pgvector, Pinecone, Qdrant or similar)
+- Experience building REST APIs (FastAPI or Flask)
+- Git and clear written communication
+
+Nice to have
+- Agent frameworks such as LangGraph, LangChain or Pydantic AI
+- LLM evaluation and observability tools (Langfuse, LangSmith)
+- Docker and a cloud platform (AWS, GCP or Azure)
+- Fine-tuning or working with open-source models
+- A degree in Computer Science or a related field

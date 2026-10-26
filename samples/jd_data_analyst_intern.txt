@@ -1,0 +1,23 @@
+Data Analyst Intern (6 months) - Bengaluru / Hybrid
+
+About the role
+We're looking for a Data Analyst Intern to join our Growth Analytics team. You'll help product and marketing teams make decisions with data.
+
+What you'll do
+- Write SQL queries to pull and join data from our warehouse
+- Build and maintain dashboards in Power BI or Tableau
+- Analyse A/B test results and share clear recommendations
+- Automate recurring reports using Python
+- Present findings to non-technical stakeholders
+
+Must have
+- Strong SQL (joins, window functions, CTEs)
+- Python for data analysis (Pandas, NumPy)
+- Experience building dashboards in Power BI or Tableau
+- Good written and verbal communication
+
+Nice to have
+- Basic statistics and A/B testing
+- Experience with Google Analytics or Mixpanel
+- Familiarity with dbt or Airflow
+- Pursuing a degree in Computer Science, Statistics, Economics or a related field
