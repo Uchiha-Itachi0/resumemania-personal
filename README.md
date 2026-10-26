@@ -8,26 +8,80 @@ Paste a job post and your resume. In about 10 seconds you see what matches, what
 - Stays on your laptop (saved in a local SQLite file)
 - Never makes up facts: invented numbers become `[N]`, unproven skills get a `[CONFIRM]` flag
 
-## Start in 3 minutes
+## Setup
 
-You need Python 3.10 or newer and a free Gemini API key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+### 1. What you need
+
+| | How to check | Get it |
+|---|---|---|
+| Python 3.11 or newer | `python3 --version` (Windows: `py --version`) | [python.org/downloads](https://www.python.org/downloads/) |
+| Git | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
+| A free Gemini API key | | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+
+### 2. Download the code
 
 ```bash
 git clone https://github.com/Uchiha-Itachi0/resumemania-personal.git
 cd resumemania-personal
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env             # Windows: copy .env.example .env
 ```
 
-Open `.env` and paste your key after `GEMINI_API_KEY=`. Then:
+### 3. Create a virtual environment and install
+
+**macOS or Linux**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Windows (PowerShell)**
+
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+If PowerShell says running scripts is disabled, skip `Activate.ps1` and put `.venv\Scripts\` in front of each command instead, for example `.venv\Scripts\python -m streamlit run app.py`.
+
+### 4. Add your Gemini key
+
+Copy the example settings file:
+
+```bash
+cp .env.example .env
+```
+
+On Windows: `copy .env.example .env`
+
+Open `.env` in any editor and paste your key after `GEMINI_API_KEY=` (no quotes, no spaces). `.env` is git-ignored, so your key is never committed.
+
+### 5. Run it
 
 ```bash
 streamlit run app.py
 ```
 
-The app opens at http://localhost:8501. Press **Fill in a sample** to try it before using your own resume.
+Your browser opens http://localhost:8501. Press **Fill in a sample** to try it with a sample job and resume, then use your own.
+
+### Next time
+
+You only install once. To start the app again, open a terminal in the project folder and run:
+
+```bash
+source .venv/bin/activate
+streamlit run app.py
+```
+
+On Windows: `.venv\Scripts\Activate.ps1`, then `streamlit run app.py`.
+
+### Get the latest version
+
+```bash
+git pull
+pip install -r requirements.txt
+```
 
 ## What you get
 
@@ -96,6 +150,8 @@ tests/                  Unit, integration and end-to-end UI tests (no API key ne
 
 ## Run the tests
 
+With the virtual environment active:
+
 ```bash
 pip install -r requirements-dev.txt
 pytest --cov
@@ -108,6 +164,10 @@ The tests use a fake model, so they run offline in a few seconds.
 
 | You see | Do this |
 |---|---|
+| `python3: command not found` | Install Python 3.11+. On Windows use `py` instead of `python3` |
+| `streamlit: command not found` | The virtual environment isn't active. Run `source .venv/bin/activate` (Windows: `.venv\Scripts\Activate.ps1`) |
+| `ModuleNotFoundError` | Run `pip install -r requirements.txt` with the virtual environment active |
+| `Port 8501 is already in use` | Another copy is running. Stop it, or run `streamlit run app.py --server.port 8502` |
 | "Add your Gemini key to start" | Create `.env` from `.env.example`, add your key, restart the app |
 | "Your Gemini API key was rejected" | Copy the key again from AI Studio. No quotes or spaces |
 | "Gemini is busy" or a slow first check | Google is overloaded. Wait a minute, or set `GEMINI_MODEL_SMART=gemini-3.5-flash-lite` |
